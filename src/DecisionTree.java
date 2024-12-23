@@ -1,6 +1,11 @@
+/**
+ * (Binary) decision tree structure, for now it does not support splitting into more factors
+ * @param <T> structure type
+ * @param <V> datatype of the splitting property
+ */
 public class DecisionTree<T, V extends Comparable<V>> {
     public final boolean isLeaf;
-    private Tester<T, V> tester;
+    private final Tester<T, V> tester;
     public final V splitValue;
     private DecisionTree yesTree;
     private DecisionTree noTree;
@@ -40,12 +45,17 @@ public class DecisionTree<T, V extends Comparable<V>> {
         return tester.test(object, splitValue);
     }
 
+    /**
+     * Tester function for a decision tree object
+     * @param <T> type of the tested object
+     * @param <V> type of the tested (splitting) property
+     */
     public interface Tester<T, V extends Comparable<V>> {
         boolean test(T object, V splitValue);
     }
 
     /**
-     * Gets the class of the object we want to test through recursion.
+     * Recursively finds the correct class that fits the decision tree model
      * @param object object we want to test.
      * @return boolean value representing class: yes (true), no (false).
      */
