@@ -1,3 +1,6 @@
+import decisionTree.DecisionTree;
+import decisionTree.LeafNode;
+
 // Example from project manual
 public class ProjectExample {
     private record Weather(String outlook, double windspeed, double temperature) {
@@ -6,25 +9,52 @@ public class ProjectExample {
         }
     }
 
-    public static void main(String[] args) {
-        DecisionTree.Tester<Weather, Double> windspeedTester = new DecisionTree.Tester<Weather, Double>() {
-            @Override
-            public boolean test(Weather object, Double splitValue) {
-                return object.windspeed >= splitValue;
-            }
-        };
-        DecisionTree.Tester<Weather, String> outlookTester = new DecisionTree.Tester<Weather, String>() {
-            @Override
-            public boolean test(Weather object, String splitValue) {
-                return object.outlook.equals(splitValue);
-            }
-        };
+    public enum GoPlaying {
+        YES,
+        NO;
 
-        DecisionTree<Weather, String> outlookTree = new DecisionTree<Weather, String>(
-                "Overcast",
-                outlookTester,
-                null,
-                new DecisionTree<Weather, Double>(10.0, windspeedTester)
+        public String toString() {
+            return name().toLowerCase();
+        }
+    }
+
+    public static class WindspeedTester implements DecisionTree.Tester<Weather> {
+        private double splitValue;
+
+        public WindspeedTester(double splitValue) {
+            this.splitValue = splitValue;
+        }
+
+        @Override
+        public boolean test(Weather object) {
+            return object.windspeed >= splitValue;
+        }
+    }
+
+    public static class OutlookTester implements DecisionTree.Tester<Weather> {
+        private String testedOutlook;
+
+        public OutlookTester(String testedOutlook) {
+            this.testedOutlook = testedOutlook;
+        }
+
+        @Override
+        public boolean test(Weather object) {
+            return object.outlook.equals(testedOutlook);
+        }
+    }
+
+    public static void main(String[] args) {
+        DecisionTree<Weather, GoPlaying> windspeedTree = new DecisionTree<Weather, GoPlaying>(
+                new WindspeedTester(10.0),
+                new LeafNode<Weather, GoPlaying>(GoPlaying.YES),
+                new LeafNode<Weather, GoPlaying>(GoPlaying.NO)
+        );
+
+        DecisionTree<Weather, GoPlaying> outlookTree = new DecisionTree<Weather, GoPlaying>(
+                new OutlookTester("Overcast"),
+                new LeafNode<Weather, GoPlaying>(GoPlaying.YES),
+                windspeedTree
         );
 
         Weather[] weathers = new Weather[] {
@@ -36,7 +66,7 @@ public class ProjectExample {
         };
 
         for (Weather weather : weathers) {
-            System.out.println(weather + ": " + (outlookTree.getConditionalClass(weather) ? "Yes" : "No"));
+            System.out.println(weather + ": " + outlookTree.getConditionalClass(weather));
         }
     }
 }

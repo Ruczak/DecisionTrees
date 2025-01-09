@@ -1,3 +1,6 @@
+import decisionTree.DecisionTree;
+import decisionTree.LeafNode;
+
 // example from Introduction to DSAI
 public class WeatherStructure {
     public final String outlook;
@@ -16,15 +19,17 @@ public class WeatherStructure {
         return "WeatherStructure{outlook=" + outlook + ", temperature=" + temperature + ", humidity=" + humidity + ", wind=" + wind + '}';
     }
 
-    private static class WeatherStringTester implements DecisionTree.Tester<WeatherStructure, String> {
+    private static class WeatherStringTester implements DecisionTree.Tester<WeatherStructure> {
         public enum Property {
             Outlook, Temperature, Humidity, Wind
         }
 
+        private final String splitValue;
         private final Property property;
 
-        public WeatherStringTester(Property property) {
+        public WeatherStringTester(Property property, String splitValue) {
             this.property = property;
+            this.splitValue = splitValue;
         }
 
         private String getPropertyValue(WeatherStructure object) {
@@ -37,7 +42,7 @@ public class WeatherStructure {
         }
 
         @Override
-        public boolean test(WeatherStructure object, String splitValue) {
+        public boolean test(WeatherStructure object) {
             return getPropertyValue(object).equals(splitValue);
         }
     }
@@ -57,18 +62,19 @@ public class WeatherStructure {
         };
 
         DecisionTree<WeatherStructure, String> humiditySubTree = new DecisionTree<>(
-                "Normal",
-                new WeatherStringTester(WeatherStringTester.Property.Humidity)
+                new WeatherStringTester(WeatherStringTester.Property.Humidity, "Normal"),
+                new LeafNode<>("Yes"),
+                new LeafNode<>("No")
         );
 
         DecisionTree<WeatherStructure, String> windSubTree = new DecisionTree<WeatherStructure, String>(
-                "Weak",
-                new WeatherStringTester(WeatherStringTester.Property.Wind)
+                new WeatherStringTester(WeatherStringTester.Property.Wind, "Weak"),
+                new LeafNode<>("Yes"),
+                new LeafNode<>("No")
         );
 
         DecisionTree<WeatherStructure, String> outlookTree = new DecisionTree<WeatherStructure, String>(
-                "Sunny",
-                new WeatherStringTester(WeatherStringTester.Property.Outlook),
+                new WeatherStringTester(WeatherStringTester.Property.Outlook, "Sunny"),
                 humiditySubTree,
                 windSubTree
         );
