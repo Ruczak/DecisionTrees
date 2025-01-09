@@ -24,23 +24,20 @@ public class UniversityExample {
         System.out.println("Predicted course grade: " + predictedCourse.name + "[" + cPos + "]");
         System.out.println("Entropy: " + globalSet.getEntropy(cPos));
 
-        System.out.println("\nInformation gains for each course");
-        for (int i = 0; courses.length > i; i++) {
-            if (i == cPos) continue;
+        Node<Student, Double> tree = generateDecisionTree(globalSet, cPos, courses, 5);
 
-            System.out.print(i + ". " + courses[i].name + ": ");
+//        if (tree instanceof DecisionTree<Student, Double>) {
+//            ((DecisionTree<Student, Double>) tree).prettyPrint(2, "");
+//        }
 
-            for (double j = 6.0; j <= 9.0; j++) {
-                System.out.printf("Gain(%.1f) = %.3f; ", j, globalSet.getInformationGain(cPos, i, j));
-            }
-            System.out.println();
+        int correctTests = 0;
+
+        for (Student student : students) {
+            if (student.grades[cPos] == tree.getConditionalClass(student)) correctTests++;
         }
 
-        Node<Student, Double> tree = generateDecisionTree(globalSet, cPos, courses, 8);
-
-        if (tree instanceof DecisionTree<Student, Double>) {
-            ((DecisionTree<Student, Double>) tree).prettyPrint(8, "");
-        }
+        System.out.println("Correct tests: " + correctTests + " per " + students.length + " students.");
+        System.out.println("Effectiveness: " + ((double) correctTests / (double) students.length));
     }
 
     public static Node<Student, Double> generateDecisionTree(StudentSet studentSet, int classIndex, Course[] courses, int depth) {
@@ -180,7 +177,7 @@ public class UniversityExample {
                 newString.append(get(i).sID);
             }
 
-            return "StudentSet{" + newString + "}";
+            return "StudentSet[" + newString + "]";
         }
     }
 }
