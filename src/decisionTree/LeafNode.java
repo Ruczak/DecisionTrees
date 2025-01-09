@@ -16,4 +16,9 @@ public class LeafNode<T, C> implements Node<T, C> {
     public C getConditionalClass(T object) {
         return value;
     }
+
+    @Override
+    public String toString() {
+        return "LeafNode{value="+ value.toString() + "}";
+    }
 }
