@@ -1,3 +1,6 @@
+import decisionTree.DecisionTree;
+import decisionTree.LeafNode;
+import decisionTree.Node;
 import university.Course;
 import university.Student;
 
@@ -18,7 +21,6 @@ public class UniversityExample {
         int cPos = 0;
         Course predictedCourse = courses[cPos];
 
-
         System.out.println("Predicted course grade: " + predictedCourse.name + "[" + cPos + "]");
         System.out.println("Entropy: " + globalSet.getEntropy(cPos));
 
@@ -33,6 +35,77 @@ public class UniversityExample {
             }
             System.out.println();
         }
+
+        Node<Student, Double> tree = generateDecisionTree(globalSet, cPos, courses, 8);
+
+        if (tree instanceof DecisionTree<Student, Double>) {
+            ((DecisionTree<Student, Double>) tree).prettyPrint(8, "");
+        }
+    }
+
+    public static Node<Student, Double> generateDecisionTree(StudentSet studentSet, int classIndex, Course[] courses, int depth) {
+        if (depth < 0 || studentSet.getEntropy(classIndex) <= 0.0) {
+            int[] gradeCount = studentSet.getGradeCount(classIndex);
+            int maxGradeCount = -1;
+            int maxGradeCountIndex = -1;
+
+            for (int i = 0; i < gradeCount.length; i++) {
+                if (gradeCount[i] > maxGradeCount) {
+                    maxGradeCount = gradeCount[i];
+                    maxGradeCountIndex = i;
+                }
+            }
+
+            return new LeafNode<>(maxGradeCountIndex + 1.0);
+        }
+
+        int maxGainCourseIndex = -1;
+        double maxGain = -1;
+        double maxGainSplitValue = -1;
+
+        for (int i = 0; courses.length > i; i++) {
+            int argumentIndex = courses[i].coursePosition;
+
+            if (argumentIndex == classIndex) continue;
+
+            for (double j = 6.0; j <= 9.0; j++) {
+                double gain = studentSet.getInformationGain(classIndex, argumentIndex, j);
+                if (gain > maxGain) {
+                    maxGain = gain;
+                    maxGainSplitValue = j;
+                    maxGainCourseIndex = argumentIndex;
+                }
+            }
+        }
+
+        DecisionTree.Tester<Student> tester = new GradeTester(maxGainCourseIndex, maxGainSplitValue);
+        StudentSet.SetPair pair = studentSet.subdivide(maxGainCourseIndex, maxGainSplitValue);
+
+        return new DecisionTree<>(
+                tester,
+                generateDecisionTree(pair.left(), classIndex, courses, depth - 1),
+                generateDecisionTree(pair.right(), classIndex, courses, depth - 1)
+        );
+    }
+
+    public static class GradeTester implements DecisionTree.Tester<Student> {
+        private final int courseIndex;
+        private final double splitValue;
+
+        public GradeTester(int courseIndex, double splittingValue) {
+            this.courseIndex = courseIndex;
+            this.splitValue = splittingValue;
+        }
+
+        @Override
+        public boolean test(Student object) {
+            return object.grades[courseIndex] >= splitValue;
+        }
+
+        @Override
+        public String toString() {
+            return "GradeTester{" + "courseIndex=" + courseIndex + ", splitValue=" + splitValue + '}';
+        }
     }
 
     public static class StudentSet extends ArrayList<Student> {
@@ -45,13 +118,19 @@ public class UniversityExample {
             this.addAll(Arrays.asList(students));
         }
 
-        public double getEntropy(int classIndex) {
+        public int[] getGradeCount(int classIndex) {
             int[] gradeCount = new int[10];
 
             for (Student student : this) {
                 int index = (int)student.grades[classIndex] - 1;
                 if (index > 0) gradeCount[index]++;
             }
+
+            return gradeCount;
+        }
+
+        public double getEntropy(int classIndex) {
+            int[] gradeCount = getGradeCount(classIndex);
 
             double sum = 0;
 
@@ -64,6 +143,23 @@ public class UniversityExample {
         }
 
         public double getInformationGain(int classIndex, int argumentIndex, double splittingValue) {
+            SetPair setPair = subdivide(argumentIndex, splittingValue);
+            return getInformationGain(classIndex, setPair);
+        }
+
+        public double getInformationGain(int classIndex, SetPair splitPair) {
+            StudentSet s1 = splitPair.left();
+            StudentSet s2 = splitPair.right();
+
+            double p1 = (double)s1.size() / size();
+            double p2 = (double)s2.size() / size();
+
+            return getEntropy(classIndex) - p1 * s1.getEntropy(classIndex) - p2 * s2.getEntropy(classIndex);
+        }
+
+        public record SetPair(StudentSet left, StudentSet right) {}
+
+        public SetPair subdivide(int argumentIndex, double splittingValue) {
             StudentSet s1 = new StudentSet();
             StudentSet s2 = new StudentSet();
 
@@ -72,10 +168,7 @@ public class UniversityExample {
                 else s2.add(student);
             }
 
-            double p1 = (double)s1.size() / size();
-            double p2 = (double)s2.size() / size();
-
-            return getEntropy(classIndex) - p1 * s1.getEntropy(classIndex) - p2 * s2.getEntropy(classIndex);
+            return new SetPair(s1, s2);
         }
 
         @Override
