@@ -15,7 +15,8 @@ public class UniversityExample {
         FileReader.read(filename, students, courses, false);
 
         StudentSet globalSet = new StudentSet(students);
-        ArrayList<Course> courseSet = (ArrayList<Course>) Arrays.asList(courses);
+
+        ArrayList<Course> courseSet = new ArrayList<Course>(Arrays.asList(courses));
 
         int cPos = 0;
         Course predictedCourse = courses[cPos];
@@ -37,25 +38,5 @@ public class UniversityExample {
 
         System.out.println("Correct tests: " + correctTests + " per " + students.length + " students.");
         System.out.println("Effectiveness: " + ((double) correctTests / (double) students.length));
-    }
-
-    public static class GradeTester implements DecisionTree.Tester<Student> {
-        private final int courseIndex;
-        private final double splitValue;
-
-        public GradeTester(int courseIndex, double splittingValue) {
-            this.courseIndex = courseIndex;
-            this.splitValue = splittingValue;
-        }
-
-        @Override
-        public boolean test(Student object) {
-            return object.grades[courseIndex] >= splitValue;
-        }
-
-        @Override
-        public String toString() {
-            return "GradeTester{" + "courseIndex=" + courseIndex + ", splitValue=" + splitValue + '}';
-        }
     }
 }
