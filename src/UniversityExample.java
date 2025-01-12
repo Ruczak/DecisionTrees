@@ -16,7 +16,7 @@ public class UniversityExample {
 
         StudentSet globalSet = new StudentSet(students);
 
-        ArrayList<Course> courseSet = new ArrayList<Course>(Arrays.asList(courses));
+        ArrayList<Course> courseSet = new ArrayList<>(Arrays.asList(courses));
 
         int cPos = 0;
         Course predictedCourse = courses[cPos];
@@ -25,18 +25,10 @@ public class UniversityExample {
         System.out.println("Entropy: " + globalSet.getEntropy(cPos));
 
         Node<Student, Double> tree = RandomForest.generateDecisionTree(globalSet, courseSet, cPos, 4);
+        RandomForest forest = new RandomForest(cPos, students, courses, 1000);
+        forest.generate(3, 10);
 
-        if (tree instanceof DecisionTree<Student, Double>) {
-            ((DecisionTree<Student, Double>) tree).prettyPrint(4, "");
-        }
-
-        int correctTests = 0;
-
-        for (Student student : students) {
-            if (student.grades[cPos] == tree.getConditionalClass(student)) correctTests++;
-        }
-
-        System.out.println("Correct tests: " + correctTests + " per " + students.length + " students.");
-        System.out.println("Effectiveness: " + ((double) correctTests / (double) students.length));
+        System.out.println("For random forest:");
+        System.out.println("Out-of-bag error: " + forest.getOOBError());
     }
 }
