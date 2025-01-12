@@ -12,6 +12,10 @@ public class StudentSet extends ArrayList<Student> {
         this.addAll(Arrays.asList(students));
     }
 
+    public StudentSet(StudentSet studentSet) {
+        super(studentSet);
+    }
+
     public int[] getGradeCount(int classIndex) {
         int[] gradeCount = new int[10];
 
